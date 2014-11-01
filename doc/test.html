@@ -1,0 +1,85 @@
+<html>
+<head>
+
+<title>Language Switch Test</title>
+<script language="JavaScript" src="jsrc/translations.js"></script>
+<script language="JavaScript">
+
+
+var WCONTROLS="100";
+
+
+function langSelectCB(e){
+	
+	var LANG;
+	var prefix="en_";
+	
+	for(idx=0;idx<lang_select.options.length;idx++){
+		if(lang_select.options[idx].selected){
+			LANG=lang_select.options[idx].text;
+			if(LANG=="English"){prefix="en";}
+			else if(LANG=="French"){prefix="fr";}
+			else if(LANG=="Italian"){prefix="it";}
+			else if(LANG=="German"){prefix="de";}
+			else if(LANG=="Kiswahili"){prefix="sw";}
+			break;
+		}
+	}
+	
+	gb=document.getElementById("generateB");
+	cmd='gb.value='+prefix+'_gbvalue';
+	eval(cmd);
+	
+}
+
+function init(){
+
+	lang_select=document.createElement("select");
+	lang_select.id="lang_select";
+	lang_select.name="lang_select";
+	lang_select.style.width=WCONTROLS.toString()+"px";
+	for(var idx=LangOptions.length-1;idx>-1;idx--){
+		opt=document.createElement("option");
+		opt.text=LangOptions[idx];
+		opt.defaultSelected=1;
+		opt.selected=0;
+		if(navigator.appName=="Microsoft Internet Explorer"){
+			lang_select.add(opt);
+			opt.attachEvent("onclick",langSelectCB);
+		}
+		else{
+			lang_select.add(opt,lang_select.options[0]);
+			opt.addEventListener("click",langSelectCB,false);
+		}
+		
+	}
+	
+	xhrB=document.createElement("input");
+	xhrB.type="submit";
+	xhrB.id="generateB";
+	xhrB.value="Générer!";
+	xhrB.style.width=(WCONTROLS).toString()+"px";
+	
+	/*
+	if(navigator.appName=="Microsoft Internet Explorer")
+		xhrB.attachEvent("onclick",saveCB);
+	else xhrB.addEventListener("click",saveCB,false);
+	*/
+	
+	document.body.appendChild(lang_select);
+	document.body.appendChild(xhrB);
+	
+}
+
+</script>
+</head>
+
+<body onload="init();">
+<script>
+function test(e){alert("hi");}
+</script>
+<input type="submit" value="YO" onclick="test();">
+
+</body>
+
+</html>
