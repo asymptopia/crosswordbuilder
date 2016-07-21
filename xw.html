@@ -1,0 +1,769 @@
+<!--
+/***************************************************************************
+
+	Author			:Charles B. Cossé 
+	
+	Website			:http://www.asymptopia.org
+	
+	Email			:ccosse@asymptopia.org
+					
+	Copyright		:(C) 2001-2010 Asymptopia Software.
+	
+	Package			:Asymptopia Math Crossword Builder
+	
+	Version			:3.2
+	
+	License			:Gnu Public License (GPL)
+	
+ ***************************************************************************/
+-->
+<html>
+<head>
+<title>Asymptopia Math Crossword Builder</title>
+<link REL="icon" HREF="logo/favorite.ico" TYPE="gif"></link>
+<script language="JavaScript" src="jsrc/translations.js"></script>
+<script language="JavaScript" src="jsrc/nav_buttons.js"></script>
+<script language="JavaScript" src="jsrc/config_table_stuff.js"></script>
+<script language="JavaScript" src="jsrc/help_table_stuff.js"></script>
+<script language="JavaScript" src="jsrc/about_table_stuff.js"></script>
+<script language="JavaScript" src="jsrc/fr_help.js"></script>
+<script language="JavaScript" src="jsrc/en_help.js"></script>
+<script language="JavaScript" src="jsrc/it_help.js"></script>
+<script language="JavaScript" src="jsrc/de_help.js"></script>
+<script language="JavaScript" src="jsrc/et_help.js"></script>
+<script language="JavaScript" src="jsrc/gr_help.js"></script>
+<script language="JavaScript" src="jsrc/cn_help.js"></script>
+<script language="JavaScript" src="jsrc/ru_help.js"></script>
+<script language="JavaScript" src="jsrc/ptbr_help.js"></script>
+<script language="JavaScript" src="jsrc/sw_help.js"></script>
+<script language="JavaScript" src="jsrc/es_help.js"></script>
+<script language="JavaScript">
+
+var BORDER=20;
+var W=null;
+var H=null;
+
+var agent=null;
+if(navigator.userAgent.indexOf("MSIE")>-1)agent="MSIE";
+else if(navigator.userAgent.indexOf("Chrome")>-1)agent="CHROME";
+else if(navigator.userAgent.indexOf("Safari")>-1)agent="SAFARI";
+else agent="SAFARI";//i.e. Firefox,Netscape,Mozilla,Opera
+
+
+if(agent=="MSIE"){
+	var W=800;
+	var H=450;
+}
+else if(agent=="SAFARI"){
+	var W=800;
+	var H=450;
+}
+else if(agent=="CHROME"){
+	var W=800;
+	var H=480;
+}
+else{
+	var W=800;
+	var H=400;
+}
+
+var USE_COLOR=1;
+var BG_COLOR="AAAAAA";
+if(USE_COLOR)BG_COLOR="#006A46";
+
+var DEFAULT_IMAGE="images/blank.jpeg";
+if(USE_COLOR)DEFAULT_IMAGE="images/color.jpg";
+
+var SHADOW_COLOR="000000";
+var FG_COLOR="FFFFFF";
+var TOP=95;
+var CELL_COLOR="FFFFFF";
+var TABLE_COLOR="000000";
+
+var CAPABILITIES_WIDTH=150;
+var WORDS_TOGGLE_WIDTH=150;
+var MINVAL_WIDTH=150;
+var MAXVAL_WIDTH=150;
+var GENERATE_WIDTH=150;
+var LANG_SELECT_WIDTH=100;
+
+var MINVAL=2;
+var MAXVAL=99;
+var INPUT_WIDTH=30;	
+var BUTTON_WIDTH=75;
+var MROW=14;
+var NCOL=22;
+
+var config_container_div=null;
+var trans_table_div=null;
+var math_table_div=null;
+var config_table_div=null;
+var generate_button_div=null;
+var key_table_div=null;
+var puzzle_table_div=null;
+var update_puzzle_button_div=null;
+var update_hints_button_div=null;
+var hints_table_div=null;
+var help_table_div=null;
+var about_table_div=null;
+var cbNames=null;
+
+var add_keyword_area=null;
+var sel_keyword=null;
+var lang_select=null;
+var prefix="en";
+
+function color_toggle(e){
+	//alert("color_toggle");
+	b=document.getElementById("color_button");
+	if(USE_COLOR==0){
+		USE_COLOR=1;
+		b.checked=USE_COLOR;
+		document.bgColor="006A46";
+		DEFAULT_IMAGE="images/color.jpg";
+		recreate_cwp_table();
+	}
+	else{
+		USE_COLOR=0;
+		b.checked=USE_COLOR;
+		document.bgColor="AAAAAA";
+		DEFAULT_IMAGE="images/blank.jpeg";
+		recreate_cwp_table();
+	}
+}
+function remove_all(){
+	while(document.body.lastChild)
+		document.body.removeChild(document.body.lastChild);
+	document.body.appendChild(nav_buttons);
+}
+function get_config(){
+	remove_all();
+	try{document.body.appendChild(config_container_div);}
+	catch(ex){dummy=0;}
+}
+function get_key(){
+	remove_all();
+	try{document.body.appendChild(generate_button_div);}
+	catch(ex){alert(ex);}
+	try{document.body.appendChild(key_table_div);}
+	catch(ex){alert(ex);}
+}
+function get_puzzle(){
+	remove_all();
+	try{document.body.appendChild(update_puzzle_button_div);}
+	catch(ex){dummy=0;}
+	try{document.body.appendChild(puzzle_table_div);}
+	catch(ex){alert(ex);}
+}
+function get_hints(){
+	remove_all();
+	try{document.body.appendChild(update_hints_button_div);}
+	catch(ex){dummy=0;}
+	try{document.body.appendChild(hints_table_div);}
+	catch(ex){alert(ex);}
+}
+function get_help(){
+	remove_all();
+	try{document.body.appendChild(help_table_div);}
+	catch(ex){alert("get_help: "+ex);}
+}
+function get_about(){
+	remove_all();
+	try{document.body.appendChild(about_table_div);}
+	catch(ex){alert("get_about: "+ex);}
+}
+function get_home(){
+	//alert("need redirect to http://www.asymptopia.org/");
+	window.location="http://www.asymptopia.org/";
+}
+function setup_trans_table(){
+	div=document.createElement("div");
+	div.style.top=TOP;
+	div.style.height=35;
+	
+	transTable=document.createElement("table");
+	transTable.style.width=W-2*BORDER;
+	transTable.style.backgroundColor=TABLE_COLOR;
+	transTable.cellSpacing=0;
+	transTable.style.fontSize="12px";
+	
+	var transRow=transTable.insertRow(-1);
+	var transColumn=transRow.insertCell(0);
+	transColumn.style.backgroundColor=CELL_COLOR;
+	if(navigator.appName=="Microsoft Internet Explorer"){transColumn.align="right";}
+	else{transColumn.align="center";}
+	
+	lang_select=document.createElement("select");
+	lang_select.title="Select language used for auto-generate functions.";
+	lang_select.id="lang_select";
+	lang_select.name="lang_select";
+	lang_select.style.width=1.5*LANG_SELECT_WIDTH.toString()+"px";
+	for(var idx=LangOptions.length-1;idx>-1;idx--){
+		opt=document.createElement("option");
+		opt.text=LangOptions[idx];
+		
+		//opt.defaultSelected=1;
+		if(opt.text=="English")opt.selected=1;
+		else opt.selected=0;
+		
+		if(navigator.appName=="Microsoft Internet Explorer"){
+			lang_select.add(opt);
+			opt.attachEvent("onSelect",langSelectCB);
+		}
+		else{
+			lang_select.add(opt,lang_select.options[0]);
+			opt.addEventListener("click",langSelectCB,false);
+		}
+	}
+	
+	gr1=document.createElement("input");
+	gr1.title="\
+		Toggle background color\
+	";
+	gr1.id="color_button"; 
+	gr1.type="radio";
+	gr1.checked=USE_COLOR;
+	if(navigator.appName=="Microsoft Internet Explorer")gr1.attachEvent("onclick",color_toggle);
+	else gr1.addEventListener("click",color_toggle,false);
+	transColumn.appendChild(gr1);
+	
+	transColumn.appendChild(lang_select);
+	
+	if(agent=="CHROME" || agent=="MSIE"){
+//		var setColumn=transRow.insertCell(1);
+		setB=document.createElement("input");
+		setB.type="submit";
+//		setB.style.width="50px";
+		setB.value="Set Language";
+		setB.title="Press to set language";
+		if(agent=="MSIE"){
+			setB.attachEvent("onclick",langSelectCB);
+		}
+		else{
+			setB.addEventListener("click",langSelectCB,false);
+		}
+		transColumn.appendChild(setB);
+	}
+
+	div.appendChild(transTable);
+	//div.appendChild(document.createTextNode("."));
+	var winwidth = window.document.width || window.document.body.clientWidth;
+	div.style.left=(winwidth-W)/2.+BORDER;
+	return(div);
+	
+}
+function langSelectCB(e){
+	var LANG;
+	lang_select=document.getElementById('lang_select');
+	
+	for(idx=0;idx<lang_select.options.length;idx++){
+		if(lang_select.options[idx].selected){
+			LANG=lang_select.options[idx].text;
+			if(LANG=="Português do Brasil"){prefix="ptbr";}
+			else if(LANG=="English"){prefix="en";}
+			else if(LANG=="Italiano"){prefix="it";}
+			else if(LANG=="Deutsch"){prefix="de";}
+			else if(LANG=="Kiswahili"){prefix="sw";}
+			else if(LANG=="Español"){prefix="es";}
+			else if(LANG=="Français"){prefix="fr";}
+			else if(LANG=="Estonian"){prefix="et";}
+			
+			else if(LANG=="\u0395\u03bb\u03bb\u03b7\u03bd\u03b9\u03ba\u03ac"){prefix="gr";}
+			else if(LANG=="\u4e2d\u6587"){prefix="cn";}
+			else if(LANG=="\u0420\u0443\u0441\u0441\u043a\u0438\u0439"){prefix="ru";}
+			else if(LANG=="Arabic"){prefix="ab";}
+			else if(LANG=="Chinese"){prefix="cn";}
+			else if(LANG=="Japanese"){prefix="jp";}
+			break;
+		}
+	}
+	
+	remove_all();
+	init();
+		
+}
+function setup_math_table(){
+	div=document.createElement("div");
+	div.style.top=TOP+BORDER;
+
+	mathTable=document.createElement("table");
+	mathTable.style.width=W-2*BORDER;
+	mathTable.style.backgroundColor=TABLE_COLOR;
+	mathTable.cellSpacing=1;
+	mathTable.style.fontSize="12px";
+
+	cmd='mathColumns='+prefix+'_mathColumns';
+	eval(cmd);
+	
+//	var mathColumns=new Array("Capability","Mode","MinVal","MaxVal","Action");
+	var mathRow=mathTable.insertRow(-1);
+	for(var j=0;j<mathColumns.length;j++){
+		cmd=mathColumns[j]+'Tab=mathRow.insertCell('+j+')';
+		eval(cmd);
+		cmd=mathColumns[j]+'Tab.style.backgroundColor=CELL_COLOR';
+		eval(cmd);
+		cmd=mathColumns[j]+'Tab.align=\"center\"';
+		eval(cmd);
+		cmd=mathColumns[j]+'Label=document.createTextNode(\"'+mathColumns[j]+'\")';
+		eval(cmd);
+		cmd=mathColumns[j]+'Tab.appendChild('+mathColumns[j]+'Label)';
+		eval(cmd);
+	}
+	var wordToggle;
+	var generateB;
+	var minVal;
+	var maxVal;
+
+	cmd='capability_labels='+prefix+'_capabilities';
+	eval(cmd);
+	
+	cmd='gbValue=\"'+prefix+'_gbValue\"';
+	eval(cmd);
+
+	var capabilities=new Array("addition","subtraction","multiplication","algebra","fractions");
+	var toggle_tooltips=new Array(
+		"Toggle the use of spelled-out words for auto-generated addition problems",
+		"Toggle the use of spelled-out words for auto-generated subtraction problems",
+		"Toggle the use of spelled-out words for auto-generated multiplication problems",
+		"Toggle for subtraction as operation in auto-generated algebra problems ",
+		"Toggle for simple fraction problems"
+	);
+	var minval_tooltips=new Array(
+		"Configure the minimum value for range of auto-generated addition problems",
+		"Configure the minimum value for range of auto-generated subtraction problems",
+		"Configure the minimum value for range of auto-generated multiplication problems",
+		"Configure the minimum value for range of auto-generated algebra problems",
+		"Configure the minimum value for range of auto-generated fraction problems"
+	);
+	var maxval_tooltips=new Array(
+		"Configure the maximum value for range of auto-generated addition problems",
+		"Configure the maximum value for range of auto-generated subtraction problems",
+		"Configure the maximum value for range of auto-generated multiplication problems",
+		"Configure the maximum value for range of auto-generated algebra problems",
+		"Configure the maximum value for range of auto-generated fraction problems"
+	);
+	var generateB_tooltips=new Array(
+		"Generate 10 addition problems as configured",
+		"Generate 10 subtraction problems as configured",
+		"Generate 10 multiplication problems as configured",
+		"Generate 10 algebra problems as configured",
+		"Generate 10 fraction problems as configured"
+	);
+	for(var i=0;i<capability_labels.length;i++){
+		cmd='mathRow=mathTable.insertRow(-1)';
+		eval(cmd);
+		for(var j=0;j<mathColumns.length;j++){
+			cmd=capability_labels[i]+'Tab=mathRow.insertCell('+j+')';
+			eval(cmd);
+			cmd=capability_labels[i]+'Tab.style.backgroundColor=CELL_COLOR';
+			eval(cmd);
+			cmd=capability_labels[i]+'Tab.align=\"center\"';
+			eval(cmd);
+			
+			if(j==0){
+				cmd='capabilitiesLabel=document.createTextNode(\"'+capability_labels[i]+'\")';
+				eval(cmd);
+				cmd=capability_labels[i]+'Tab.appendChild(capabilitiesLabel)';
+				eval(cmd);
+			}
+			else if(j==1){
+				cmd='wordToggle=document.createElement(\"input\")';
+				eval(cmd);
+				cmd='wordToggle.title=\"'+toggle_tooltips[i]+'\"';
+				eval(cmd);
+				cmd='wordToggle.type=\"radio\"';
+				eval(cmd);
+				cmd='wordToggle.id=\"'+capabilities[i]+'\"';
+				eval(cmd);
+				cmd='wordToggle.defaultChecked=false';
+				eval(cmd);
+				cmd=capability_labels[i]+'Tab.appendChild(wordToggle)';
+				eval(cmd);
+				if(navigator.appName=="Microsoft Internet Explorer"){
+					cmd='wordToggle.attachEvent(\"onclick\",capability_toggle)';
+					eval(cmd);
+				}
+				else{
+					cmd='wordToggle.addEventListener(\"click\",capability_toggle,false)';
+					eval(cmd);
+				}
+			}
+			else if(j==2){
+				cmd='minVal=document.createElement(\"input\")';
+				eval(cmd);
+				cmd='minVal.title=\"'+minval_tooltips[i]+'\"';
+				eval(cmd);
+				cmd='minVal.id=\"'+capabilities[i]+'_minval_area\"';
+				eval(cmd);
+				cmd='minVal.name=\"'+capabilities[i]+'_minval_area\"';
+				eval(cmd);
+				cmd='minVal.value=MINVAL';
+				eval(cmd);
+				cmd='minVal.style.width=INPUT_WIDTH';
+				eval(cmd);
+				cmd=capability_labels[i]+'Tab.appendChild(minVal)';
+				eval(cmd);
+			}
+			else if(j==3){
+				cmd='maxVal=document.createElement(\"input\")';
+				eval(cmd);
+				cmd='maxVal.title=\"'+maxval_tooltips[i]+'\"';
+				eval(cmd);
+				cmd='maxVal.id=\"'+capabilities[i]+'_maxval_area\"';
+				eval(cmd);
+				cmd='maxVal.name=\"'+capabilities[i]+'_maxval_area\"';
+				eval(cmd);
+				cmd='maxVal.value=MAXVAL';
+				if(i==4)cmd='maxVal.value=10';
+				eval(cmd);
+				cmd='maxVal.style.width=INPUT_WIDTH';
+				eval(cmd);
+				cmd=capability_labels[i]+'Tab.appendChild(maxVal)';
+				eval(cmd);
+			}
+			else if(j==4){
+				cmd='generateB=document.createElement(\"input\")';
+				eval(cmd);
+				cmd='generateB.title=\"'+generateB_tooltips[i]+'\"';
+				eval(cmd);
+				cmd='generateB.type=\"submit\"';
+				eval(cmd);
+				cmd='generateB.value='+gbValue;
+				eval(cmd);
+				cmd='generateB.style.width=BUTTON_WIDTH';
+				eval(cmd);
+				cmd=capability_labels[i]+'Tab.appendChild(generateB)';
+				eval(cmd);
+				if(navigator.appName=="Microsoft Internet Explorer"){
+					cmd='generateB.attachEvent(\"onclick\",generate_'+capabilities[i]+')';
+					eval(cmd);
+				}
+				else{
+					cmd='generateB.addEventListener(\"click\",generate_'+capabilities[i]+',false)';
+					eval(cmd);
+				}
+			}
+		}
+	}
+	
+	div.appendChild(mathTable);
+	var winwidth = window.document.width || window.document.body.clientWidth;
+	div.style.left=(winwidth-W)/2.+BORDER;
+	return(div);
+
+}	
+function setup_config_table(){
+	ConfigTable=document.createElement("table");
+	ConfigTable.style.width=W-2*BORDER-2;
+	ConfigTable.style.backgroundColor=TABLE_COLOR;
+	ConfigTable.cellPadding=0;
+	ConfigTable.cellSpacing=0;
+	ConfigTable.style.fontSize="12px";
+
+	word_row=ConfigTable.insertRow(-1);
+	word_cell=word_row.insertCell(0);	
+	
+	keyword_table=document.createElement("table");
+	keyword_table.cellPadding=0;
+	keyword_table.cellSpacing=0;
+	
+	cmd='formatLabelTxt='+prefix+'_formatLabelTxt';
+	eval(cmd);
+	
+	title_row=keyword_table.insertRow(-1);
+	title_cell=title_row.insertCell(0);
+	table_title=document.createTextNode(formatLabelTxt);
+	title_cell.appendChild(table_title);
+	title_cell.bgColor=CELL_COLOR;
+	//title_cell.style.fontWeight="bold";
+	title_cell.align="center";
+	title_cell.style.width=W/2-BORDER;
+	title_cell.style.fontSize="12px";
+
+	cmd='wordsLabelTxt='+prefix+'_wordsLabelTxt';
+	eval(cmd);
+	
+	title_cell2=title_row.insertCell(1);
+	table_title=document.createTextNode(wordsLabelTxt);
+	title_cell2.appendChild(table_title);
+	title_cell2.bgColor=CELL_COLOR;
+	//title_cell2.style.fontWeight="bold";
+	title_cell2.align="center";
+	title_cell2.style.width=W/2-BORDER;
+	title_cell2.style.fontSize="12px";
+	
+	text_row=keyword_table.insertRow(-1);
+	add_cell=text_row.insertCell(0);
+	added_cell=text_row.insertCell(1);
+	
+	if(!add_keyword_area)add_keyword_area=document.createElement("textarea");
+	add_keyword_area.title="\
+In this area you enter the word:hint pairs (words and hints are separated by semicolon) to be used in constructing the crossword\
+puzzle.  Each word:hint pair should occupy a separate line.\
+Alternatively you can use the \"generate\" buttons above to quickly generate math problems.\
+These word:hint pairs must be ingested by the application before you proceed to generate the puzzle.\
+This is accomplished by the \"Add\" button below.\
+	";
+	add_keyword_area.style.width=W/2-BORDER;
+	add_keyword_area.style.height=120;
+	
+	add_keyword_area.name="add_keyword_area";
+	add_keyword_area.id="add_keyword_area";
+	add_cell.appendChild(add_keyword_area);
+	
+	if(!sel_keyword)sel_keyword=document.createElement("select");
+	sel_keyword.title="\
+Word:hint pairs in this text area have been ingested (loaded) by the application and will be used to create your puzzle.\
+Entries in this text area can be removed by selecting the entry and pushing the \"Remove\" button below.\
+	";
+	sel_keyword.id="select_keywordlist";
+	sel_keyword.name="select_keywordlist";
+	sel_keyword.style.width=W/2-BORDER;
+	sel_keyword.style.height=120;
+	sel_keyword.multiple=1;
+	added_cell.appendChild(sel_keyword);
+	
+	button_row=keyword_table.insertRow(-1);
+	addB_cell=button_row.insertCell(0);
+	remB_cell=button_row.insertCell(1);
+	
+	cmd='addButtonTxt='+prefix+'_addButtonTxt';
+	eval(cmd);
+	
+	add_button=document.createElement("input");
+	add_button.title="Add the words in this area to list of words for puzzle.";
+	add_button.id="add_button"; 
+	add_button.type="submit";//calls add_keyword_to_session
+	if(navigator.appName=="Microsoft Internet Explorer")add_button.attachEvent("onclick",add_entries);
+	else add_button.addEventListener("click",add_entries,false);
+	add_button.value=addButtonTxt;
+	add_button.style.width=W/2-BORDER;
+	addB_cell.appendChild(add_button);
+	
+	cmd='removeButtonTxt='+prefix+'_removeButtonTxt';
+	eval(cmd);
+
+	rem_button=document.createElement("input");
+	rem_button.title="Remove selected words from consideration.";
+	rem_button.id="delete_button"; 
+	rem_button.type="submit";//calls add_url_to_session
+	if(navigator.appName=="Microsoft Internet Explorer")rem_button.attachEvent("onclick",rem_entries);
+	else rem_button.addEventListener("click",rem_entries,false);
+	rem_button.value=removeButtonTxt;
+	rem_button.style.width=W/2-BORDER;
+	remB_cell.appendChild(rem_button);
+	
+	keyword_pyld=document.createElement("input");
+	keyword_pyld.type="hidden";
+	keyword_pyld.name="keyword_pyld";
+	keyword_pyld.id="keyword_pyld";
+	
+	//+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+	word_cell.appendChild(keyword_table);
+	
+	//+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+	//User-Defined MROW,NCOL:
+	row_col_row=ConfigTable.insertRow(-1);
+	row_col_cell=row_col_row.insertCell(0);
+	
+	RowColTable=document.createElement("table");
+	RowColTable.style.width=W-2*BORDER;
+	RowColTable.style.backgroundColor=TABLE_COLOR;
+	RowColTable.cellPadding=0;
+	RowColTable.cellSpacing=0;
+	RowColTable.style.fontSize="12px";
+	
+	title_row=RowColTable.insertRow(-1);
+	
+	cmd='numRowsTxt='+prefix+'_numRowsTxt';
+	eval(cmd);
+
+	title_cell=title_row.insertCell(0);
+	table_title=document.createTextNode(numRowsTxt);
+	title_cell.appendChild(table_title);
+	title_cell.bgColor=CELL_COLOR;
+	//title_cell.style.fontWeight="bold";
+	title_cell.align="center";
+	title_cell.style.width=W/2-BORDER;
+	
+	cmd='numColsTxt='+prefix+'_numColsTxt';
+	eval(cmd);
+
+	title_cell=title_row.insertCell(1);
+	table_title=document.createTextNode(numColsTxt);
+	title_cell.appendChild(table_title);
+	title_cell.bgColor=CELL_COLOR;
+	//title_cell.style.fontWeight="bold";
+	title_cell.align="center";
+	title_cell.style.width=W/2-BORDER;
+	
+	text_row=RowColTable.insertRow(-1);
+	mrow_cell=text_row.insertCell(0);
+	ncol_cell=text_row.insertCell(1);
+	
+	mrow_area=document.createElement("textarea");
+	mrow_area.title="Configure number of puzzle rows";
+	mrow_area.cols="2";
+	mrow_area.rows="1";
+	mrow_area.name="mrow_area";
+	mrow_area.value=MROW;
+	mrow_area.id="mrow_area";
+	mrow_area.style.width=W/2-BORDER;
+	mrow_area.style.height="30";
+	mrow_cell.appendChild(mrow_area);
+	
+	ncol_area=document.createElement("textarea");
+	ncol_area.title="Configure number of puzzle columns";
+	ncol_area.cols="2";
+	ncol_area.rows="1";
+	ncol_area.name="ncol_area";
+	ncol_area.value=NCOL;
+	ncol_area.id="ncol_area";
+	ncol_area.style.width=W/2-BORDER;
+	ncol_area.style.height="30";
+	ncol_cell.appendChild(ncol_area);
+
+	cmd='setButtonTxt='+prefix+'_setButtonTxt';
+	eval(cmd);
+
+	setB_row=RowColTable.insertRow(-1);
+	setB_cell=setB_row.insertCell(0);
+	set_button=document.createElement("input");
+	set_button.title="Cause newly configured row and column sizes to take effect";
+	set_button.id="set_button"; 
+	set_button.type="submit";
+	if(navigator.appName=="Microsoft Internet Explorer")set_button.attachEvent("onclick",setMN);
+	else set_button.addEventListener("click",setMN,false);
+	set_button.value=setButtonTxt;
+	set_button.style.width=W/2-BORDER;
+	setB_cell.appendChild(set_button);
+	//setB_cell.setAttribute("colspan","2");
+	
+	blankB_cell=setB_row.insertCell(1);
+	blank_button=document.createElement("input");
+	blank_button.id="blank_button"; 
+	blank_button.type="submit";
+	//if(navigator.appName=="Microsoft Internet Explorer")blank_button.attachEvent("onclick",blankMN);
+	//else blank_button.addEventListener("click",blankMN,false);
+	blank_button.value="";
+	blank_button.style.width=W/2-BORDER;
+	blankB_cell.appendChild(blank_button);
+	//setB_cell.setAttribute("colspan","2");
+	
+	row_col_cell.appendChild(RowColTable);
+	//+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+	//+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+
+	div=document.createElement("div");
+	div.style.top="260";
+	var winwidth = window.document.width || window.document.body.clientWidth;
+	div.style.left=(winwidth-W)/2.+BORDER;
+	div.appendChild(ConfigTable);
+	return(div);
+}
+
+function setup_config_container(){
+	
+	var winwidth = window.document.width || window.document.body.clientWidth;
+	config_container=document.createElement("div");
+	config_container.style.position="absolute";
+	config_container.style.top=TOP;
+	config_container.style.width=W+5;
+	config_container.style.height=H+5;
+	config_container.style.left=(winwidth-W)/2;
+	config_container.style.backgroundColor=BG_COLOR;
+	
+	bg_div=document.createElement("div");
+	bg_div.style.position="absolute";
+	bg_div.style.top=5;
+	bg_div.style.width=W;
+	bg_div.style.height=H;
+	bg_div.style.left=5;
+	bg_div.style.backgroundColor=SHADOW_COLOR;
+	
+	fg_div=document.createElement("div");
+	fg_div.style.position="absolute";
+	fg_div.style.top=0;
+	fg_div.style.width=W;
+	fg_div.style.height=H;
+	fg_div.style.left=0;
+	fg_div.style.backgroundColor=FG_COLOR;
+	
+	in_div=document.createElement("div");
+	in_div.style.position="absolute";
+	in_div.style.top=BORDER;
+	in_div.style.width=W-2*BORDER;
+	in_div.style.height=H-2*BORDER;
+	in_div.style.left=BORDER;
+	in_div.style.backgroundColor=FG_COLOR;
+	
+	nav_buttons=NavButtons(tabLabelNames,cbNames);
+	document.body.appendChild(nav_buttons);
+	
+	config_container.appendChild(bg_div);
+	config_container.appendChild(fg_div);
+	
+	in_div.appendChild(trans_table_div);
+	in_div.appendChild(math_table_div);
+	in_div.appendChild(config_table_div);
+	config_container.appendChild(in_div);
+	document.body.appendChild(config_container);
+	
+	return(config_container);
+}	
+function init(){
+	
+	math_table_div=null;
+	config_table_div=null;
+	config_container_div=null;
+	generate_button_div=null;
+	key_table_div=null;
+	puzzle_table_div=null;
+	update_puzzle_button_div=null;
+	update_hints_button_div=null;
+	hints_table_div=null;
+	help_table_div=null;
+	about_table_div=null;
+
+//	Numbers 0-99
+	cmd='nstr='+prefix+'_nstr';
+	eval(cmd);
+	
+	//alert(navigator.appCodeName+'\n'+navigator.appName+'\n'+navigator.appVersion+'\n'+navigator.userAgent+'\n'+navigator.platform);
+	//alert(navigator.userAgent.indexOf("Firefox"));
+	//alert(navigator.userAgent.indexOf("Safari"));
+	
+	document.bgColor=BG_COLOR;
+//	tabLabelNames=new Array("configure","generate key","generate puzzle","generate hints","help","about");
+	cbNames=new Array("get_config","get_key","get_puzzle","get_hints","get_help","get_about");
+	
+	cmd='tabLabelNames='+prefix+'_tabLabelNames';
+	eval(cmd);
+		
+	nav_buttons=NavButtons(tabLabelNames,cbNames);
+	document.body.appendChild(nav_buttons);
+
+	if(!trans_table_div)trans_table_div=setup_trans_table();
+	if(!math_table_div)math_table_div=setup_math_table();
+	if(!config_table_div)config_table_div=setup_config_table();
+	if(!config_container_div)config_container_div=setup_config_container();
+	if(!generate_button_div)generate_button_div=make_generate_button_div();
+	if(!key_table_div)key_table_div=setup_cwp_table(getMROW(),getNCOL(),CELLSIZE,DEFAULT_IMAGE,DEFAULT_STR,1);
+	if(!puzzle_table_div)puzzle_table_div=setup_cwp_table(getMROW(),getNCOL(),CELLSIZE,DEFAULT_IMAGE,DEFAULT_STR,2);
+	if(!update_puzzle_button_div)update_puzzle_button_div=make_update_puzzle_button_div();
+	if(!update_hints_button_div)update_hints_button_div=make_update_hints_button_div();
+	if(!hints_table_div)hints_table_div=setup_hints_table();
+	if(!help_table_div)help_table_div=setup_help_table();
+//	alert(help_table_div);
+	if(!about_table_div)about_table_div=setup_about_table();
+	
+}
+
+
+</script>
+<script language="JavaScript" src="jsrc/cwp_table_stuff.js"></script>
+</head>
+<body onload="init();get_config();">
+</body>
+</html>
+
